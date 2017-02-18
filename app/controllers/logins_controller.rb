@@ -1,6 +1,6 @@
 class LoginsController < ApplicationController
     def index
-        
+
     end
 
     def new
@@ -19,8 +19,8 @@ class LoginsController < ApplicationController
     def create
         user = User.find_by(email: params[:email])
         if user && user.authenticate(params[:password])
-            session[:user_id] = user.id
-            render :json => {'msg': 'success login', 'status': true}
+            log_in user
+            render :json => {'msg': 'success login', 'status': true, 'session': session[:user_id]}
         else
             render :json => {'msg': 'failed login', 'status': false}
         end
