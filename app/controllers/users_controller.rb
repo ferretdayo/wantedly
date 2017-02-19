@@ -2,7 +2,7 @@ class UsersController < ApplicationController
     # 全ユーザの取得
     def index
         @users = User.all
-        render json: {'users': @users, 'user_id': session[:user_id] }, callback: params[:callback]
+        render json: {'users': @users, 'current_user': current_user }, callback: params[:callback]
     end
 
     def new

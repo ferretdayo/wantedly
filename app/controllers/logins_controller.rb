@@ -20,7 +20,7 @@ class LoginsController < ApplicationController
         user = User.find_by(email: params[:email])
         if user && user.authenticate(params[:password])
             log_in user
-            render :json => {'msg': 'success login', 'status': true, 'session': session[:user_id]}
+            render :json => {'msg': 'success login', 'status': true, 'current_user': current_user }
         else
             render :json => {'msg': 'failed login', 'status': false}
         end
