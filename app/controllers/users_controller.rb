@@ -1,8 +1,8 @@
 class UsersController < ApplicationController
     # 全ユーザの取得
     def index
-        @users = User.all
-        render json: {'users': @users, 'current_user': current_user }, callback: params[:callback]
+        users = User.all
+        render json: {'users': users, 'current_user': current_user }, callback: params[:callback]
     end
 
     def new
@@ -10,7 +10,9 @@ class UsersController < ApplicationController
     end
 
     def show
-        @user = User.find(params[:id])
+        user = User.find(params[:id])
+        tagData = user.tags.all
+        render json: {'msg': 'success to fetch Data', 'status': true, 'tag': tagData, 'user': user}
     end
 
     def edit
@@ -19,8 +21,8 @@ class UsersController < ApplicationController
 
     # ユーザの作成
     def create 
-        @user = User.new({name: params[:name], email: params[:email], password: params[:password]})
-        if @user.save
+        user = User.new({name: params[:name], email: params[:email], password: params[:password]})
+        if user.save
             render json: {"msg": "create user", "status": true}, callback: params[:callback]
         else
             render json: {"msg": "error", "status": false}, callback: params[:callback]
