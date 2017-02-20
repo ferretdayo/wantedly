@@ -12,6 +12,7 @@ class UsersController < ApplicationController
     def show
         user = User.find(params[:id])
         tagData = user.tags.all
+        #tagCnt = user.
         render json: {'msg': 'success to fetch Data', 'status': true, 'tag': tagData, 'user': user}
     end
 
