@@ -22,32 +22,52 @@ class TagsController < ApplicationController
         @tag = Tag.find_by(tag: params[:tag])
         # タグがあった場合、対象のtagのidから設定
         if @tag
-            # tag_idとuser_idの組み合わせがある場合は追加しない
+            # もう既にタグとユーザの関連があるかを確認
             @tagUser = TagUser.find_by(tag_id: @tag.id, user_id: params[:id])
+
+            # tag_idとuser_idの組み合わせがある場合は追加しない
             if @tagUser
                 render json: {'msg': "already exist", 'status': false}
+
+            # 新たにユーザにタグを追加する場合
             else 
                 # タグとユーザの関連の追加
                 @newTagUser = TagUser.create({tag_id: @tag.id, user_id: params[:id]})
-                if @newTagUser
+                @taggerUser = self.tagger(@tagUser.id, params[:id], params[:add_userid])
+                if @newTagUser && @taggerUser
                     render json: {'msg': "success to add tag", 'status': true}
                 else
                     render json: {'msg': "failed to add tag", 'status': false}
                 end
             end
+        # タグがない場合
         else
             # TODO transactionですべき・・・
             
             # tagがない場合は新規に作成
             @newTag = Tag.create({tag: params[:tag]});
             @newTagUser = TagUser.create({tag_id: @newTag.id, user_id: params[:id]})
+            
+            @taggerUser = self.tagger(@newTagUser.id, params[:id], params[:add_userid])
 
-            if @newTag && @newTagUser
+            if @newTag && @newTagUser && @taggerUser
                 render json: {'msg': "success to add tag", 'status': true}
             else
                 render json: {'msg': "failed to add tag", 'status': false}
             end
         end
+    end
+ 
+    # タグを追加した人をtagger_userに追加する
+    def tagger(tagid, userid, add_userid)
+        # 他のユーザが追加したのであれば、タグを追加した人として記録
+        if(userid != add_userid)
+            # ユーザに対して追加したユーザのペアがあれば追加しない
+            if !TaggerUser.find_by({tag_user_id: userid, user_id: add_userid})
+                return TaggerUser.create({tag_user_id: tagid, user_id: add_userid})
+            end
+        end
+        return false
     end
 
     def update

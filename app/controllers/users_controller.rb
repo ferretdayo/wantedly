@@ -9,11 +9,27 @@ class UsersController < ApplicationController
 
     end
 
+    # ユーザ情報（ユーザ、タグ、タグの付属したユーザID）の取得
     def show
-        user = User.find(params[:id])
-        tagData = user.tags.all
-        #tagCnt = user.
-        render json: {'msg': 'success to fetch Data', 'status': true, 'tag': tagData, 'user': user}
+        @user = User.find(params[:id])
+        @tagData = @user.tags.all
+        
+        @tagUserList = TagUser.where(user_id: @user.id)
+
+        # ユーザについているタグのidを取得
+        tagUserIds = []
+        @tagUserList.each{|tagUser|
+            tagUserIds.push(tagUser.id)
+        }
+
+        # 指定のユーザについているタグを追加した人の情報を取得
+        taggerUsers = Hash.new { |h, k| h[k] = [] }
+        @taggerInfo = TaggerUser.where(tag_user_id: tagUserIds)
+        @taggerInfo.each{|tagger|
+            taggerUsers[tagger.tag_user_id].push(tagger.user_id)
+        }
+
+        render json: {'msg': 'success to fetch Data', 'status': true, 'tag': @tagData, 'user': @user, 'tagCnt': taggerUsers}
     end
 
     def edit
