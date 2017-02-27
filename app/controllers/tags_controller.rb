@@ -33,9 +33,15 @@ class TagsController < ApplicationController
             else 
                 # タグとユーザの関連の追加
                 @newTagUser = TagUser.create({tag_id: @tag.id, user_id: params[:id]})
-                @taggerUser = self.tagger(@tagUser.id, params[:id], params[:add_userid])
-                if @newTagUser && @taggerUser
-                    render json: {'msg': "success to add tag", 'status': true}
+                @taggerUser = self.tagger(@newTagUser.id, params[:id], params[:add_userid])
+                if @newTagUser
+                    # 他人にタグを追加
+                    if @taggerUser
+                        render json: {'msg': "success to add tag", 'status': true}
+                    # 自分にタグを追加
+                    else 
+                        render json: {'msg': "success to add self tag", 'status': true}
+                    end
                 else
                     render json: {'msg': "failed to add tag", 'status': false}
                 end
@@ -46,12 +52,17 @@ class TagsController < ApplicationController
             
             # tagがない場合は新規に作成
             @newTag = Tag.create({tag: params[:tag]});
+            # 中間テーブルに関連を作成
             @newTagUser = TagUser.create({tag_id: @newTag.id, user_id: params[:id]})
             
             @taggerUser = self.tagger(@newTagUser.id, params[:id], params[:add_userid])
 
-            if @newTag && @newTagUser && @taggerUser
-                render json: {'msg': "success to add tag", 'status': true}
+            if @newTag && @newTagUser
+                if @taggerUser
+                    render json: {'msg': "success to add tag", 'status': true}
+                else 
+                    render json: {'msg': "success to add self tag", 'status': true}
+                end
             else
                 render json: {'msg': "failed to add tag", 'status': false}
             end
@@ -63,7 +74,7 @@ class TagsController < ApplicationController
         # 他のユーザが追加したのであれば、タグを追加した人として記録
         if(userid != add_userid)
             # ユーザに対して追加したユーザのペアがあれば追加しない
-            if !TaggerUser.find_by({tag_user_id: userid, user_id: add_userid})
+            if !TaggerUser.find_by({tag_user_id: tagid, user_id: add_userid})
                 return TaggerUser.create({tag_user_id: tagid, user_id: add_userid})
             end
         end

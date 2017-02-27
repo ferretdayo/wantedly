@@ -12,24 +12,27 @@ class UsersController < ApplicationController
     # ユーザ情報（ユーザ、タグ、タグの付属したユーザID）の取得
     def show
         @user = User.find(params[:id])
+        # 指定されたユーザの持つタグ全て
         @tagData = @user.tags.all
-        
-        @tagUserList = TagUser.where(user_id: @user.id)
+        # 指定されたユーザとタグの中間情報
+        @middleTagUser = @user.tag_users
 
-        # ユーザについているタグのidを取得
-        tagUserIds = []
-        @tagUserList.each{|tagUser|
-            tagUserIds.push(tagUser.id)
-        }
+        taggedUser = Hash.new { |h, k| h[k] = [] }
+        # タグとユーザの関連付け
+        @middleTagUser.each do |middle|
+            # タグにプラスしたユーザの情報(array)
+            # TODO: どうにかして一気に取れないものか
+            @tagged_user = middle.users.select(:name, :id)
+            # 指定のタグにプラスしたユーザの情報を格納
+            @tagData.each do |tag|
+                # タグが一致した時
+                if middle.tag_id == tag.id
+                    taggedUser[tag.tag] = @tagged_user
+                end
+            end
+        end
 
-        # 指定のユーザについているタグを追加した人の情報を取得
-        taggerUsers = Hash.new { |h, k| h[k] = [] }
-        @taggerInfo = TaggerUser.where(tag_user_id: tagUserIds)
-        @taggerInfo.each{|tagger|
-            taggerUsers[tagger.tag_user_id].push(tagger.user_id)
-        }
-
-        render json: {'msg': 'success to fetch Data', 'status': true, 'tag': @tagData, 'user': @user, 'tagCnt': taggerUsers}
+        render json: {'msg': 'success to fetch Data', 'status': true, 'user': @user, 'taggedUser': taggedUser}
     end
 
     def edit
