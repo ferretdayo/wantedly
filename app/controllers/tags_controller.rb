@@ -81,8 +81,17 @@ class TagsController < ApplicationController
         return false
     end
 
+    # 指定のタグにユーザが+1する際に呼ばれる
     def update
-
+        @tagid = Tag.find_by(tag: params[:id])
+        @tagUser = TagUser.find_by(user_id: params[:user_id], tag_id: @tagid.id)
+        @taggerUser = self.tagger(@tagUser.id, params[:user_id], params[:add_userid])
+        # タグの追加ができた場合
+        if @taggerUser
+            render json: {'msg': "success to add user by tag", 'status': true, 'tag': @tagid.id}
+        else
+            render json: {'msg': "failed to add user by tag", 'status': false}
+        end
     end
 
     def destroy

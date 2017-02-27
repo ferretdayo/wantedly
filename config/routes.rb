@@ -3,4 +3,5 @@ Rails.application.routes.draw do
   resources :users
   resources :logins
   resources :tags
+  post '/tags/:id', to: 'tags#update'
 end
