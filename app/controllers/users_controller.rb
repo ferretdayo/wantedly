@@ -2,7 +2,7 @@ class UsersController < ApplicationController
     use ActionDispatch::Session::CookieStore
     # 全ユーザの取得
     def index
-        users = User.where.not(id: current_user.id)
+        users = User.where.not(id: current_user.id).select(:name, :id)
         render json: {'users': users, 'current_user': current_user }, callback: params[:callback]
     end
 
