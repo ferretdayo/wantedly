@@ -1,4 +1,5 @@
 class LoginsController < ApplicationController
+    use ActionDispatch::Session::CookieStore
     def index
 
     end

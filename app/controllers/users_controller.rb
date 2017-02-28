@@ -1,4 +1,5 @@
 class UsersController < ApplicationController
+    use ActionDispatch::Session::CookieStore
     # 全ユーザの取得
     def index
         users = User.all

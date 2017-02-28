@@ -1,4 +1,5 @@
 class TagsController < ApplicationController
+    use ActionDispatch::Session::CookieStore
     
     def index
         render json: {'tag': Tag.all}
@@ -30,17 +31,19 @@ class TagsController < ApplicationController
                 render json: {'msg': "already exist", 'status': false}
 
             # 新たにユーザにタグを追加する場合
-            else 
+            else
                 # タグとユーザの関連の追加
                 @newTagUser = TagUser.create({tag_id: @tag.id, user_id: params[:id]})
-                @taggerUser = self.tagger(@newTagUser.id, params[:id], params[:add_userid])
+                @taggerUser = self.tagger(@newTagUser.id, params[:id], current_user.id)
                 if @newTagUser
                     # 他人にタグを追加
-                    if @taggerUser
+                    if @taggerUser != -1 && @taggerUser != 0
                         render json: {'msg': "success to add tag", 'status': true}
                     # 自分にタグを追加
+                    elsif @taggerUser == 0
+                        render json: {'msg': "can't add tag in yourself", 'status': false}
                     else 
-                        render json: {'msg': "success to add self tag", 'status': true}
+                        render json: {'msg': "failed to add tag. already exist", 'status': false}
                     end
                 else
                     render json: {'msg': "failed to add tag", 'status': false}
@@ -55,13 +58,17 @@ class TagsController < ApplicationController
             # 中間テーブルに関連を作成
             @newTagUser = TagUser.create({tag_id: @newTag.id, user_id: params[:id]})
             
-            @taggerUser = self.tagger(@newTagUser.id, params[:id], params[:add_userid])
+            @taggerUser = self.tagger(@newTagUser.id, params[:id], current_user.id)
 
             if @newTag && @newTagUser
-                if @taggerUser
+                # 他人にタグを追加
+                if @taggerUser != -1 && @taggerUser != 0
                     render json: {'msg': "success to add tag", 'status': true}
+                # 自分にタグを追加
+                elsif @taggerUser == 0
+                    render json: {'msg': "can't add tag in yourself", 'status': false}
                 else 
-                    render json: {'msg': "success to add self tag", 'status': true}
+                    render json: {'msg': "failed to add tag. already exist", 'status': false}
                 end
             else
                 render json: {'msg': "failed to add tag", 'status': false}
@@ -70,27 +77,33 @@ class TagsController < ApplicationController
     end
  
     # タグを追加した人をtagger_userに追加する
+    # @return TaggUser|-1|0 タグ追加した情報|すでにタグを+1した情報が追加されていた|自身にタグ付けしようとしていた
     def tagger(tagid, userid, add_userid)
         # 他のユーザが追加したのであれば、タグを追加した人として記録
         if(userid != add_userid)
             # ユーザに対して追加したユーザのペアがあれば追加しない
             if !TaggerUser.find_by({tag_user_id: tagid, user_id: add_userid})
                 return TaggerUser.create({tag_user_id: tagid, user_id: add_userid})
+            else
+                return -1
             end
         end
-        return false
+        return 0
     end
 
     # 指定のタグにユーザが+1する際に呼ばれる
     def update
         @tagid = Tag.find_by(tag: params[:id])
         @tagUser = TagUser.find_by(user_id: params[:user_id], tag_id: @tagid.id)
-        @taggerUser = self.tagger(@tagUser.id, params[:user_id], params[:add_userid])
-        # タグの追加ができた場合
-        if @taggerUser
-            render json: {'msg': "success to add user by tag", 'status': true, 'tag': @tagid.id}
-        else
-            render json: {'msg': "failed to add user by tag", 'status': false}
+        @taggerUser = self.tagger(@tagUser.id, params[:user_id], current_user.id)
+        # 他人にタグを追加
+        if @taggerUser != -1 && @taggerUser != 0
+            render json: {'msg': "success to add tag", 'status': true}
+        # 自分にタグを追加
+        elsif @taggerUser == 0
+            render json: {'msg': "can't add tag in yourself", 'status': false}
+        else 
+            render json: {'msg': "failed to add tag. already exist", 'status': false}
         end
     end
 
