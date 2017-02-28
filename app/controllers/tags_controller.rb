@@ -19,6 +19,14 @@ class TagsController < ApplicationController
 
     # タグの追加
     def create
+        if !current_user
+            render json: {'msg': "please login", 'status': false}
+            return
+        end
+        if !params[:id] || !params[:tag]
+            render json: {'msg': "invalid params", 'status': false}
+            return
+        end
         @user = User.find(params[:id])
         @tag = Tag.find_by(tag: params[:tag])
         # タグがあった場合、対象のtagのidから設定
@@ -29,7 +37,6 @@ class TagsController < ApplicationController
             # tag_idとuser_idの組み合わせがある場合は追加しない
             if @tagUser
                 render json: {'msg': "already exist", 'status': false}
-
             # 新たにユーザにタグを追加する場合
             else
                 # タグとユーザの関連の追加
@@ -93,6 +100,12 @@ class TagsController < ApplicationController
 
     # 指定のタグにユーザが+1する際に呼ばれる
     def update
+        if !current_user
+            render json: {'msg': "please login", 'status': false}
+        end
+        if !params[:id] || !params[:user_id]
+            render json: {'msg': "invalid params", 'status': false}
+        end
         @tagid = Tag.find_by(tag: params[:id])
         @tagUser = TagUser.find_by(user_id: params[:user_id], tag_id: @tagid.id)
         @taggerUser = self.tagger(@tagUser.id, params[:user_id], current_user.id)
