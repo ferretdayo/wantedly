@@ -73,7 +73,7 @@ class TagsController < ApplicationController
                     render json: {'msg': "success to add tag", 'status': true}
                 # 自分にタグを追加
                 elsif @taggerUser == 0
-                    render json: {'msg': "can't add tag in yourself", 'status': false}
+                    render json: {'msg': "success to add tag", 'status': true}
                 else 
                     render json: {'msg': "failed to add tag. already exist", 'status': false}
                 end
