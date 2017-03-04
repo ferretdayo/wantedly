@@ -1,20 +1,8 @@
 class TagsController < ApplicationController
-    use ActionDispatch::Session::CookieStore
     
     def index
         render json: {'tag': Tag.all}
-    end
-
-    def new
-
-    end
-    
-    def show
-        
-    end
-
-    def edit
-
+        return
     end
 
     # タグの追加
@@ -37,6 +25,7 @@ class TagsController < ApplicationController
             # tag_idとuser_idの組み合わせがある場合は追加しない
             if @tagUser
                 render json: {'msg': "already exist", 'status': false}
+                return
             # 新たにユーザにタグを追加する場合
             else
                 # タグとユーザの関連の追加
@@ -46,14 +35,18 @@ class TagsController < ApplicationController
                     # 他人にタグを追加
                     if @taggerUser != -1 && @taggerUser != 0
                         render json: {'msg': "success to add tag", 'status': true}
+                        return
                     # 自分にタグを追加
                     elsif @taggerUser == 0
                         render json: {'msg': "success to add tag", 'status': true}
+                        return
                     else 
                         render json: {'msg': "failed to add tag. already exist", 'status': false}
+                        return
                     end
                 else
                     render json: {'msg': "failed to add tag", 'status': false}
+                    return
                 end
             end
         # タグがない場合
@@ -71,18 +64,22 @@ class TagsController < ApplicationController
                 # 他人にタグを追加
                 if @taggerUser != -1 && @taggerUser != 0
                     render json: {'msg': "success to add tag", 'status': true}
+                    return
                 # 自分にタグを追加
                 elsif @taggerUser == 0
                     render json: {'msg': "success to add tag", 'status': true}
+                    return
                 else 
                     render json: {'msg': "failed to add tag. already exist", 'status': false}
+                    return
                 end
             else
                 render json: {'msg': "failed to add tag", 'status': false}
+                return
             end
         end
     end
- 
+
     # タグを追加した人をtagger_userに追加する
     # @return TaggUser|-1|0 タグ追加した情報|すでにタグを+1した情報が追加されていた|自身にタグ付けしようとしていた
     def tagger(tagid, userid, add_userid)
@@ -98,13 +95,15 @@ class TagsController < ApplicationController
         return 0
     end
 
-    # 指定のタグにユーザが+1する際に呼ばれる
+    # 指定のタグにユーザを+1する際に呼ばれる
     def update
         if !current_user
             render json: {'msg': "please login", 'status': false}
+            return
         end
         if !params[:id] || !params[:user_id]
             render json: {'msg': "invalid params", 'status': false}
+            return
         end
         @tagid = Tag.find_by(tag: params[:id])
         @tagUser = TagUser.find_by(user_id: params[:user_id], tag_id: @tagid.id)
@@ -112,15 +111,14 @@ class TagsController < ApplicationController
         # 他人にタグを追加
         if @taggerUser != -1 && @taggerUser != 0
             render json: {'msg': "success to add tag", 'status': true}
+            return
         # 自分にタグを追加
         elsif @taggerUser == 0
             render json: {'msg': "can't add tag in yourself", 'status': false}
+            return
         else 
             render json: {'msg': "failed to add tag. already exist", 'status': false}
+            return
         end
-    end
-
-    def destroy
-
     end
 end
